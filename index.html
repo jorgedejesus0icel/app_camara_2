@@ -1,58 +1,516 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
     <script type="text/javascript" src="https://unpkg.com/webcam-easy/dist/webcam-easy.min.js"></script>
-    <link rel="stylesheet" href="style.css">
     <title>Toma de Fotografía Alumno y Docente</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 20px;
+        }
+
+        main {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            gap: 20px;
+        }
+
+        #input-div {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        #input-div h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: clamp(1.5rem, 4vw, 2rem);
+        }
+
+        #input-div p {
+            color: #666;
+            font-size: clamp(0.85rem, 2vw, 0.95rem);
+            margin-bottom: 20px;
+        }
+
+        #input-div label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        #filename {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            transition: border-color 0.3s;
+        }
+
+        #filename:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            background-color: #3498db;
+            border: none;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-primary a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            display: block;
+        }
+
+        .form-check {
+            margin-bottom: 10px;
+            padding-left: 2em;
+        }
+
+        .form-check-input:checked {
+            background-color: #3498db;
+            border-color: #3498db;
+        }
+
+        .display-cover {
+            position: relative;
+            width: 100%;
+            background: #000;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            aspect-ratio: 16/9;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #silueta {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: auto;
+            height: 90%;
+            max-width: 90%;
+            object-fit: contain;
+            opacity: 0.4;
+            pointer-events: none;
+            display: none;
+            z-index: 10;
+        }
+
+        .grid-line {
+            position: absolute;
+            background-color: #74FF00;
+            opacity: 0.5;
+            z-index: 20;
+            pointer-events: none;
+            transition: all 0.1s ease;
+        }
+
+        #vertLine {
+            width: 2px;
+            height: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        #horizLine {
+            height: 2px;
+            width: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .video-options {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 30;
+            background: rgba(0,0,0,0.7);
+            padding: 8px 12px;
+            border-radius: 8px;
+            backdrop-filter: blur(5px);
+        }
+
+        .custom-select {
+            background: transparent;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: clamp(0.75rem, 2vw, 0.9rem);
+        }
+
+        .custom-select option {
+            background: #333;
+            color: white;
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 30;
+            display: flex;
+            gap: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 50px;
+            backdrop-filter: blur(5px);
+        }
+
+        .controls button {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            border: none;
+            transition: all 0.3s;
+        }
+
+        .controls button:hover {
+            transform: scale(1.1);
+        }
+
+        .btn-danger {
+            background-color: #e74c3c;
+        }
+
+        .btn-info {
+            background-color: #3498db;
+        }
+
+        .btn-outline-success {
+            border: 2px solid #2ecc71;
+            color: #2ecc71;
+            background: transparent;
+        }
+
+        .btn-outline-success:hover {
+            background: #2ecc71;
+            color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            main {
+                flex-direction: column;
+            }
+            
+            #input-div {
+                width: 100%;
+            }
+            
+            .controls button {
+                width: 40px;
+                height: 40px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <main class="row justify-content-center">
-    <div id="input-div" class="col-6">
-        <h1>Cámara ICEL</h1>
-        <p>Introduce el ID en número del usuario: para alumno ID a 9 dígitos, o para docentes a Num Empleado a 7 dígitos.
-        </br>(Si las cámaras no aparecen en la lista, favor de actualizar la página)</p>
-        <label for="id">Ingresa el id:</label>
-        <input type="text" id="filename" selected name="id">
-        <button type="button" class="btn btn-primary">
-            <a download id="download-link">Tomar foto</a>
-        </button>
-        <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="grid-slider">
-            <label class="form-check-label" for="grid-slider">Líneas Guía</label>
+    <main class="row justify-content-center g-4">
+        <div id="input-div" class="col-12 col-md-5 col-lg-4">
+            <h1>Cámara ICEL</h1>
+            <p>Introduce el ID del usuario: 9 dígitos para alumno, 7 dígitos para docente.<br>
+            <small class="text-muted">(Si las cámaras no aparecen, actualiza la página)</small></p>
+            
+            <label for="filename">Ingresa el ID:</label>
+            <input type="text" id="filename" class="form-control" placeholder="Ej: 123456789">
+            
+            <button type="button" class="btn btn-primary">
+                <a download id="download-link">Tomar foto</a>
+            </button>
+            
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="grid-slider">
+                <label class="form-check-label" for="grid-slider">Líneas Guía</label>
+            </div>
+            
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="silueta-slider">
+                <label class="form-check-label" for="silueta-slider">Silueta</label>
+            </div>
         </div>
-        <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="silueta-slider">
-            <label class="form-check-label" for="silueta-slider">Silueta</label>
+        
+        <div class="col-12 col-md-7 col-lg-8">
+            <div class="display-cover">
+                <video autoplay playsinline></video>
+                <canvas class="d-none"></canvas>
+                <img src="silueta 1.png" alt="Silueta guía" id="silueta">
+                
+                <div class="video-options">
+                    <select class="custom-select">
+                        <option value="">Seleccionar cámara</option>
+                    </select>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn btn-danger play" title="Play">▶</button>
+                    <button class="btn btn-info pause d-none" title="Pause">⏸</button>
+                    <button class="btn btn-outline-success screenshot d-none" title="Capturar">📸</button>
+                </div>
+            </div>
         </div>
-     </div>
-    <div class="display-cover">
-        <video autoplay></video>
-        <canvas class="d-none"></canvas>
-        <img src="silueta 1.png" alt="imagen guía" id="silueta">
+    </main>
 
-        <div class="video-options">
-            <select name="" id="" class="custom-select">
-                <option value="">Select camera</option>
-            </select>
-        </div>
+    <script>
+        // Inicializar Feather Icons (opcional)
+        feather?.replace();
 
-        <img class="screenshot-image d-none" alt="">
+        // Elementos del DOM
+        const controls = document.querySelector('.controls');
+        const cameraSelect = document.querySelector('.custom-select');
+        const video = document.querySelector('video');
+        const canvas = document.querySelector('canvas');
+        const buttons = [...controls.querySelectorAll('button')];
+        const downloadLink = document.getElementById('download-link');
+        const cover = document.querySelector('.display-cover');
+        const gridSlider = document.getElementById('grid-slider');
+        const siluetaSlider = document.getElementById('silueta-slider');
+        const silueta = document.getElementById('silueta');
+        const filenameInput = document.getElementById('filename');
 
-        <div class="controls">
-            <button class="btn btn-danger play" title="Play"><i data-feather="play-circle"></i></button>
-            <button class="btn btn-info pause d-none" title="Pause"><i data-feather="pause"></i></button>
-            <button class="btn btn-outline-success screenshot d-none" title="ScreenShot"><i data-feather="image"></i></button>
-        </div>
-    </div>
-</main>
+        let streamStarted = false;
+        let currentStream = null;
+        const [play, pause, screenshot] = buttons;
 
-<script src="https://unpkg.com/feather-icons"></script>
-<script src="script.js"></script>
+        // Configuración de la cámara
+        const constraints = {
+            video: {
+                width: { ideal: 1920 },
+                height: { ideal: 1080 },
+                facingMode: 'user'
+            }
+        };
+
+        // Función para ajustar elementos al tamaño del video
+        function adjustOverlays() {
+            if (!video.videoWidth) return;
+
+            const videoRect = video.getBoundingClientRect();
+            
+            // Ajustar líneas guía
+            if (gridSlider.checked) {
+                const vertLine = document.getElementById('vertLine');
+                const horizLine = document.getElementById('horizLine');
+                
+                if (vertLine && horizLine) {
+                    vertLine.style.height = videoRect.height + 'px';
+                    horizLine.style.width = videoRect.width + 'px';
+                }
+            }
+            
+            // Ajustar silueta
+            if (siluetaSlider.checked) {
+                silueta.style.height = Math.min(videoRect.height * 0.9, videoRect.width * 0.9) + 'px';
+            }
+        }
+
+        // Obtener cámaras disponibles
+        async function getCameraSelection() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                
+                const options = videoDevices.map(videoDevice => 
+                    `<option value="${videoDevice.deviceId}">${videoDevice.label || 'Cámara ' + (videoDevices.indexOf(videoDevice) + 1)}</option>`
+                );
+                
+                cameraSelect.innerHTML = '<option value="">Seleccionar cámara</option>' + options.join('');
+            } catch (error) {
+                console.error('Error al obtener cámaras:', error);
+            }
+        }
+
+        // Iniciar stream
+        async function startStream(constraints) {
+            try {
+                if (currentStream) {
+                    currentStream.getTracks().forEach(track => track.stop());
+                }
+                
+                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = currentStream;
+                
+                play.classList.add('d-none');
+                pause.classList.remove('d-none');
+                streamStarted = true;
+                
+                // Esperar a que el video cargue metadata para ajustar overlays
+                video.addEventListener('loadedmetadata', adjustOverlays);
+            } catch (error) {
+                console.error('Error al acceder a la cámara:', error);
+                alert('No se pudo acceder a la cámara. Verifica los permisos.');
+            }
+        }
+
+        // Evento play
+        play.onclick = () => {
+            if (streamStarted) {
+                video.play();
+                play.classList.add('d-none');
+                pause.classList.remove('d-none');
+                return;
+            }
+
+            if ('mediaDevices' in navigator && navigator.mediaDevices.getUserMedia) {
+                const updatedConstraints = {
+                    ...constraints,
+                    video: {
+                        ...constraints.video,
+                        deviceId: cameraSelect.value ? { exact: cameraSelect.value } : undefined
+                    }
+                };
+                startStream(updatedConstraints);
+            }
+        };
+
+        // Evento pause
+        pause.onclick = () => {
+            video.pause();
+            play.classList.remove('d-none');
+            pause.classList.add('d-none');
+        };
+
+        // Cambiar cámara
+        cameraSelect.onchange = () => {
+            if (cameraSelect.value) {
+                const updatedConstraints = {
+                    video: {
+                        ...constraints.video,
+                        deviceId: { exact: cameraSelect.value }
+                    }
+                };
+                startStream(updatedConstraints);
+            }
+        };
+
+        // Capturar y descargar foto
+        downloadLink.onclick = (e) => {
+            if (!streamStarted) {
+                alert('Primero inicia la cámara');
+                e.preventDefault();
+                return;
+            }
+
+            const fileName = filenameInput.value.trim();
+            
+            if (fileName.length === 9) {
+                prefix = 'P';
+            } else if (fileName.length === 7) {
+                prefix = 'D';
+            } else {
+                alert('Por favor ingresa un ID válido (9 dígitos para alumno, 7 para docente)');
+                e.preventDefault();
+                return;
+            }
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            
+            downloadLink.href = canvas.toDataURL('image/png');
+            downloadLink.download = prefix + fileName + '.png';
+        };
+
+        // Líneas guía
+        gridSlider.onchange = () => {
+            if (gridSlider.checked) {
+                if (!document.getElementById('vertLine')) {
+                    const vertLine = document.createElement('div');
+                    const horizLine = document.createElement('div');
+                    
+                    vertLine.id = 'vertLine';
+                    horizLine.id = 'horizLine';
+                    vertLine.className = 'grid-line';
+                    horizLine.className = 'grid-line';
+                    
+                    cover.appendChild(vertLine);
+                    cover.appendChild(horizLine);
+                    
+                    adjustOverlays();
+                }
+            } else {
+                document.getElementById('vertLine')?.remove();
+                document.getElementById('horizLine')?.remove();
+            }
+        };
+
+        // Silueta
+        siluetaSlider.onchange = () => {
+            silueta.style.display = siluetaSlider.checked ? 'block' : 'none';
+            if (siluetaSlider.checked) {
+                adjustOverlays();
+            }
+        };
+
+        // Ajustar al redimensionar la ventana
+        window.addEventListener('resize', () => {
+            adjustOverlays();
+        });
+
+        // Observar cambios en el tamaño del video
+        const resizeObserver = new ResizeObserver(() => {
+            adjustOverlays();
+        });
+        
+        if (video) {
+            resizeObserver.observe(video);
+        }
+
+        // Inicializar
+        getCameraSelection();
+
+        // Limpiar al cerrar
+        window.addEventListener('beforeunload', () => {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+            }
+        });
+    </script>
 </body>
 </html>
