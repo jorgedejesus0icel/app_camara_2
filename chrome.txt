@@ -1,0 +1,24 @@
+start chrome.exe -app="http://reca-ng.com/ReCA/docentes" --user-data-dir="C:\Temp\profile_null"
+start chrome.exe "https://sites.google.com/icel.edu.mx/cuautitlan/configuracionah"
+
+
+	for /f "tokens=1 delims=:" %%h in ("%time%") do set hour=%%h
+	if %hour% geq 19 (
+	shutdown /a
+    shutdown -s -f -t 0
+
+
+REM Lista de nombres de equipo que se deben comparar para apgado en aulas extendidas
+set "nombres_permitidos2025= CUA-AHA105 CUA-AHA201 CUA-AHA203 CUA-AHA206 CUA-AHA208 CUA-AHA303 CUA-AHB102 CUA-AHB103 CUA-AHB109 CUA-AHB202 CUA-AHB204 CUA-AHB205 CUA-AHB206 CUA-AHB207 CUA-AHB208 CUA-AHB210 CUA-AHB211 CUA-AHC101 CUA-AHC102 CUA-AHC103 CUA-AHC104 "
+
+REM Verificar si el nombre del equipo está en la lista de nombres permitidos
+for %%b in (%nombres_permitidos2025%) do (
+    if /i "!nombre_equipo!"=="%%b" (
+	
+	for /f "tokens=1 delims=:" %%h in ("%time%") do set hour=%%h
+	if %hour% geq 19 (
+	shutdown /a
+    shutdown -s -f -t 0
+	)
+    )
+)

@@ -1,0 +1,11 @@
+echo off
+MODE con:cols=15 lines=1
+cls
+shutdown -a
+shutdown /f /s /t 39600
+cls
+cd %public%\pictures\icel\
+cls
+fp.bat
+cls
+exit
